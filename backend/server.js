@@ -4,16 +4,26 @@ import morgan from "morgan";
 import {sql} from "./config/db.js"
 import cors from 'cors'
 import productRoutes from './routes/productRoutes.js';
+import path from "path";
+import { fileURLToPath } from "url";
+
+
 // import aj from './lib/arcjet.js'
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(helmet()); // Helmet is a security middleware that helps you protect your app by setting various HTTP headers
+app.use(
+    helmet({
+    contentSecurityPolicy: false,
+})); // Helmet is a security middleware that helps you protect your app by setting various HTTP headers
 app.use(morgan("dev")); // log the requests
 
 
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT || 3000;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // app.use(async (req, res, next) => {
 //   try {
@@ -46,6 +56,16 @@ const PORT = process.env.PORT ?? 3000;
 // });
 
 app.use('/api', productRoutes);
+
+if (process.env.NODE_ENV === "production") {
+    // serve our react app
+
+    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+    app.get("/*splat", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+    });
+};
+
 
 
 
